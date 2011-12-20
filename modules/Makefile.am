@@ -19,6 +19,7 @@ pkglib_LTLIBRARIES =  ibmod_htp.la \
                      ibmod_lua.la \
                      ibmod_poc_sig.la \
                      ibmod_remote_address.la \
+                     ibmod_ip_blacklist.la \
                      ibmod_trace.la
 
 if BUILD_GEOIP
@@ -73,6 +74,10 @@ ibmod_poc_ac_sig_la_CFLAGS = $(AM_CFLAGS)
 ibmod_remote_address_la_SOURCES = remote_address.c
 ibmod_remote_address_la_CFLAGS = ${AM_CFLAGS}
 ibmod_remote_address_la_LDFLAGS = $(AM_LDFLAGS)
+
+ibmod_ip_blacklist_la_SOURCES = ip_blacklist.c
+ibmod_ip_blacklist_la_CFLAGS = ${AM_CFLAGS}
+ibmod_ip_blacklist_la_LDFLAGS = $(AM_LDFLAGS)
 
 ibmod_trace_la_SOURCES = trace.c
 ibmod_trace_la_CFLAGS = ${AM_CFLAGS}
