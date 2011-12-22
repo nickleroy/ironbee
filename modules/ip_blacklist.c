@@ -24,15 +24,12 @@
  * @author Nick LeRoy <nleroy@qualys.com>
  */
 
+#include <stdint.h>
+#include <sys/types.h>
 #include <string.h>
 #include <ctype.h>
-#ifdef TESTING
-# include <stdlib.h>
-# include <stddef.h>
-# include <errno.h>
-# include <stdio.h>
-#endif
 
+/* Ironbee include files */
 #include <ironbee/types.h>
 #include <ironbee/engine.h>
 #include <ironbee/util.h>
@@ -42,136 +39,14 @@
 #include <ironbee/bytestr.h>
 #include <ironbee/mpool.h>
 
-#ifdef TESTING
-# define MAX_LINE_BUF (16*1024)
-
-#else
 /* Define the module name as well as a string version of it. */
 #define MODULE_NAME        remote_ip
 #define MODULE_NAME_STR    IB_XSTRINGIFY(MODULE_NAME)
 
 /* Declare the public module symbol. */
 IB_MODULE_DECLARE();
-#endif
 
 
-/**
- * @internal
- * Skip spaces, return pointer to first non-space.
- *
- * Skips spaces in the passed in string.
- *
- * @param[in] str String to skip
- *
- * @returns Pointer to first non-space character in the string.
- */
-static char *skip_space( char *str )
-{
-    while (*str == ' ') {
-        ++str;
-    }
-    return (*str == '\0') ? NULL : str;
-}
-
-/**
- * @internal
- * Parse the user agent header.
- *
- * Attempt to tokenize the user agent string passed in, splitting up
- * the passed in string into component parts.
- *
- * @param[in,out] str User agent string to parse
- * @param[out] p_product Pointer to product string
- * @param[out] p_platform Pointer to platform string
- * @param[out] p_extra Pointer to "extra" string
- *
- * @returns Status code
- */
-static ib_status_t modipbl_parse_uastring( char *str,
-                                         char **p_product,
-                                         char **p_platform,
-                                         char **p_extra )
-{
-    char *lp = NULL;            /* lp: Left parent */
-    char *extra = NULL;
-
-    /* Initialize these to known values */
-    *p_platform = NULL;
-    *p_extra = NULL;
-
-    /* Skip any leading space */
-    str = skip_space(str);
-
-    /* Simple validation */
-    if ( (str == NULL) || (isalnum(*str) == 0) ) {
-        *p_product = NULL;
-        *p_extra = str;
-        return (str == NULL) ? IB_EUNKNOWN : IB_OK;
-    }
-
-    /* The product is the first field. */
-    *p_product = str;
-
-    /* Search for a left parent followed by a right paren */
-    lp = strstr(str, " (");
-    if (lp != NULL) {
-        char *rp;
-
-        /* Find the matching right paren (if it exists).
-         *  First try ") ", then ")" to catch a paren at end of line. */
-        rp = strstr(lp, ") ");
-        if (rp == NULL) {
-            rp = strchr(str, ')');
-        }
-
-        /* If no matching right paren, ignore the left paren */
-        if (rp == NULL) {
-            lp = NULL;
-        }
-        else {
-            /* Terminate the string after the right paren */
-            ++rp;
-            if ( (*rp == ' ') || (*rp == ',') || (*rp == ';') ) {
-                extra = rp;
-                *extra++ = '\0';
-            }
-            else if (*rp != '\0') {
-                lp = NULL;
-            }
-        }
-    }
-
-    /* No parens?  'Extra' starts after the first space */
-    if (lp == NULL) {
-        char *cur = strchr(str, ' ');
-        if (cur != NULL) {
-            *cur++ = '\0';
-        }
-        extra = cur;
-    }
-
-    /* Otherwise, clean up around the parens */
-    else {
-        char *cur = lp++;
-        while( (cur > str) && (*cur == ' ') ) {
-            *cur = '\0';
-            --cur;
-        }
-    }
-
-    /* Skip extra whitespace preceding the real extra */
-    if (extra != NULL) {
-        extra = skip_space(extra);
-    }
-
-    /* Done: Store the results in the passed in pointers.
-     * Note: p_product is filled in above. */
-    *p_platform = lp;
-    *p_extra = extra;
-    return IB_OK;
-}
-
-#ifndef TESTING
 /**
  * @internal
  * Parse the user agent header, splitting into component fields.
@@ -186,10 +61,10 @@ static ib_status_t modipbl_parse_uastring( char *str,
  * @returns Status code
  */
 static ib_status_t modipbl_store_field(ib_engine_t *ib,
-                                     ib_mpool_t *mp,
-                                     ib_field_t *agent_list,
-                                     const char *name,
-                                     const char *value)
+                                       ib_mpool_t *mp,
+                                       ib_field_t *agent_list,
+                                       const char *name,
+                                       const char *value)
 {
     IB_FTRACE_INIT(modipbl_store_field);
     ib_field_t *tmp_field = NULL;
@@ -236,8 +111,8 @@ static ib_status_t modipbl_store_field(ib_engine_t *ib,
  * @returns Status code
  */
 static ib_status_t modipbl_agent_fields(ib_engine_t *ib,
-                                      ib_tx_t *tx,
-                                      char *str)
+                                        ib_tx_t *tx,
+                                        char *str)
 {
     IB_FTRACE_INIT(modipbl_handle_tx);
     ib_field_t *agent_list = NULL;
@@ -254,7 +129,7 @@ static ib_status_t modipbl_agent_fields(ib_engine_t *ib,
     }
 
     /* Build a new list. */
-    rc = ib_data_add_list(tx->dpi, "User-Agent", &agent_list);
+    rc = ib_data_add_list(tx->dpi, "White/Black List", &agent_list);
     if (rc != IB_OK)
     {
         ib_log_error(ib, 0, "Unable to add UserAgent list to DPI.");
@@ -299,8 +174,8 @@ static ib_status_t modipbl_agent_fields(ib_engine_t *ib,
  * @returns Status code
  */
 static ib_status_t modipbl_handle_req_headers(ib_engine_t *ib,
-                                            ib_tx_t *tx,
-                                            void *data)
+                                              ib_tx_t *tx,
+                                              void *data)
 {
     IB_FTRACE_INIT(modipbl_handle_req_headers);
     ib_conn_t *conn = tx->conn;
@@ -424,8 +299,8 @@ static ib_status_t modipbl_finish(ib_engine_t *ib, ib_module_t *m)
  * @returns Status code
  */
 static ib_status_t modipbl_context_init(ib_engine_t *ib,
-                                      ib_module_t *m,
-                                      ib_context_t *ctx)
+                                        ib_module_t *m,
+                                        ib_context_t *ctx)
 {
     IB_FTRACE_INIT(modipbl_context_init);
 
@@ -434,80 +309,13 @@ static ib_status_t modipbl_context_init(ib_engine_t *ib,
 
 IB_MODULE_INIT(
     IB_MODULE_HEADER_DEFAULTS,      /* Default metadata */
-    "user agent",                   /* Module name */
+    "IP Blacklist",                 /* Module name */
     NULL,                           /* Global config data */
     0,                              /* Global config data length*/
     NULL,                           /* Module config map */
     NULL,                           /* Module directive map */
 
-    modipbl_init,                     /* Initialize function */
-    modipbl_finish,                   /* Finish function */
-    modipbl_context_init              /* Context init function */
+    modipbl_init,                   /* Initialize function */
+    modipbl_finish,                 /* Finish function */
+    modipbl_context_init            /* Context init function */
 );
-#else
-
-/**
- * @brief
- * Main to run a simple test of the user agent logic.
- *
- * Reads user agent strings from a file, and invokes the internal
- * modipbl_parse_uastring() function to parse each string, then prints the
- * resulting data.
- *
- * @param[in] argc Argument count
- * @param[in] argv Argument list
- *
- * @returns Status code
- */
-int main( int argc, const char *argv[] )
-{
-    char    buf[MAX_LINE_BUF];
-    char   *p;
-    char   *product, *platform, *extra;
-    FILE   *fp;
-
-    /* Parse command line. */
-    if (argc != 2) {
-        fprintf(stderr, "usage: user_agent <file>\n");
-        exit(1);
-    }
-
-    /* Attempt to open the user agent file */
-    fp = fopen(argv[1], "r");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open file %s: %s\n",
-                argv[1], strerror(errno));
-        exit(1);
-    }
-
-    /* Read each line of the file, try to parse it as a user agent string. */
-    while ( (p = fgets(buf, sizeof(buf), fp)) != NULL) {
-
-        /* Strip off the trailing whitespace */
-        int len = strlen(buf);
-        while( isspace(buf[len-1]) ) {
-            buf[--len] = '\0';
-        }
-        printf( "%s:\n", buf );
-
-        /* Parse it */
-        modipbl_parse_uastring(buf, &product, &platform, &extra);
-
-        /* Print the results */
-        if (product != NULL) {
-            printf( "  PRODUCT  = '%s'\n", product );
-        }
-        if (platform != NULL) {
-            printf( "  PLATFORM = '%s'\n", platform );
-        }
-        if (extra != NULL) {
-            printf( "  EXTRA    = '%s'\n", extra );
-        }
-    }
-
-    /* Done */
-    fclose(fp);
-    return 0;
-}
-
-#endif
