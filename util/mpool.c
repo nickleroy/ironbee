@@ -394,6 +394,7 @@ void ib_mpool_destroy(ib_mpool_t *mp)
 
     /* Free the name */
     if (mp->name != NULL) {
+        printf("Destroying mpool %s\n", mp->name);
         free((void*)(mp->name));
         mp->name = NULL;
     }
