@@ -52,6 +52,7 @@ static void addr2str(const struct sockaddr *addr, char *str, int *port);
 
 ib_engine_t DLL_LOCAL *ironbee = NULL;
 TSTextLogObject ironbee_log;
+TSMutex ironbee_log_mutex;
 #define DEFAULT_LOG "ts-ironbee"
 
 /* Plugin Structure */
@@ -729,13 +730,17 @@ static void ironbee_logger(void *dummy, int level,
 
     /* Write it to the ironbee log. */
     /* FIXME: why is the format arg's prototype not const char* ? */
-    rc = prefix ? TSTextLogObjectWrite(ironbee_log, (char*)"%s: %s", prefix, buf)
+    TSMutexLock(ironbee_log_mutex);
+    rc = prefix ?
+        TSTextLogObjectWrite(ironbee_log, (char*)"%s: %s", prefix, buf)
         : TSTextLogObjectWrite(ironbee_log, (char*)"%s", buf);
     if (rc != TS_SUCCESS) {
         errmsg = "Data logging failed!";
     }
-    if (errmsg != NULL)
+    TSMutexUnlock(ironbee_log_mutex);
+    if (errmsg != NULL) {
         TSError("[ts-ironbee] %s\n", errmsg);
+    }
 }
 
 /**
@@ -909,7 +914,13 @@ static int ironbee_init(const char *configfile, const char *logfile)
     if (rv != TS_SUCCESS) {
         return IB_OK + rv;
     }
-   
+
+    /* Create the logger mutex */
+    ironbee_log_mutex = TSMutexCreate( );
+    if (ironbee_log_mutex == NULL) {
+        return IB_EALLOC;
+    }
+
     rc = atexit(ibexit);
     if (rc != 0) {
         return IB_OK + rv;
