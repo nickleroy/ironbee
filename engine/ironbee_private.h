@@ -118,6 +118,12 @@ struct ib_context_t {
 
     /* Hooks */
     ib_hook_t   *hook[IB_STATE_EVENT_NUM + 1]; /**< Registered hook callbacks */
+
+    /* Rules to execute / phase: One rule set per "phase" */
+    ib_ruleng_ruleset_t *rulesets[IB_RULENG_PHASE_COUNT]; /**< Rules to exec */
+
+    /* All rules defined in this context */
+    ib_ruleng_rulelist_t    *ctx_rules;   /**< Context specific rules */
 };
 
 /**
