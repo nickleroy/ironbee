@@ -31,6 +31,7 @@
 #include <ironbee/plugin.h>
 #include <ironbee/module.h>
 #include <ironbee/provider.h>
+#include <rule_engine_private.h>
 
 /**
  * @internal
@@ -71,6 +72,7 @@ struct ib_engine_t {
     ib_hash_t          *apis;             /**< Hash tracking provider APIs */
     ib_hash_t          *providers;        /**< Hash tracking providers */
     ib_hash_t          *tfns;             /**< Hash tracking transformations */
+    ib_rulelist_t      *rules;            /**< Global rules */
 };
 
 /**
@@ -120,10 +122,10 @@ struct ib_context_t {
     ib_hook_t   *hook[IB_STATE_EVENT_NUM + 1]; /**< Registered hook callbacks */
 
     /* Rules to execute / phase: One rule set per "phase" */
-    ib_ruleng_ruleset_t *rulesets[IB_RULENG_PHASE_COUNT]; /**< Rules to exec */
+    ib_ruleset_t            *ruleset;     /**< Rules to exec */
 
     /* All rules defined in this context */
-    ib_ruleng_rulelist_t    *ctx_rules;   /**< Context specific rules */
+    ib_rulelist_t           *ctx_rules;   /**< Context specific rules */
 };
 
 /**

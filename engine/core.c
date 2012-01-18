@@ -4938,6 +4938,13 @@ static ib_status_t core_init(ib_engine_t *ib,
         ib_parser_provider_set_instance(ib->ctx, parser);
     }
 
+    /* Initialize the core rule engine */
+    rc = ib_rule_engine_init(ib, m);
+    if (rc != IB_OK) {
+        ib_log_error(ib, 0, "Failed to initialize rule engine: %d", rc);
+        IB_FTRACE_RET_STATUS(rc);
+    }
+
     IB_FTRACE_RET_STATUS(IB_OK);
 }
 
@@ -5152,6 +5159,13 @@ static ib_status_t core_ctx_init(ib_engine_t *ib,
         IB_FTRACE_RET_STATUS(rc);
     }
     ib_log_provider_set_instance(ctx, lpi);
+
+    /* Initialize the rule engine for the context */
+    rc = ib_rule_engine_ctx_init(ib, mod, ctx);
+    if (rc != IB_OK) {
+        ib_log_error(ib, 0, "Failed to initialize rule engine contxt: %d", rc);
+        IB_FTRACE_RET_STATUS(rc);
+    }
 
     // Get the log provider
     lp  = lpi->pr;

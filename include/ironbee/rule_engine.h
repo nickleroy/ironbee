@@ -25,20 +25,13 @@
  * @author Nick LeRoy <nleroy@qualys.com>
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdint.h>
-
-#include <sys/types.h>
-#include <unistd.h>
-
 #include <ironbee/build.h>
 #include <ironbee/release.h>
 
 #include <ironbee/types.h>
-#include <ironbee/operators.h>
-#include <ironbee/list.h>
+#include <ironbee/operator.h>
+#include <ironbee/mpool.h>
+#include <ironbee/engine.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,98 +43,52 @@ extern "C" {
  * @{
  */
 
-/* TODO: in Craig's code */
-typedef struct ib_action_t ib_action_t;
-typedef struct ib_action_instance_t ib_action_instance_t;
-
 /**
- * Rule phases.
+ * Rule phase number.
  */
 typedef enum {
-    phase_none,
-    phase_request_header_available,
-    phase_request_body_available,
-    phase_response_header_available,
-    phase_response_body_available,
-    phase_postprocess,
-    IB_RULENG_PHASE_COUNT
-} ib_ruleng_phase;
-
-/**
- * Rule engine: Rule meta data
- */
-typedef struct {
-    ib_num_t         number;            /**< Rule number */
-    ib_ruleng_phase  phase;             /**< Phase to execute rule */
-    void            *data;              /**< Generic data */
-} ib_ruleng_rule_meta;
-
-/**
- * Rule engine: condition data
- */
-typedef struct {
-    ib_operator_instance_t *operator;   /**< Condition operator */
-    ib_list_t              *args;       /**< Arguments to the operator */
-} ib_ruleng_rule_condition;
-
-/**
- * Rule engine: action */
- */
-typedef enum {
-    IB_ACTION_RETURN,
-} ib_ruleng_rule_action_type;
-
-typedef struct {
-    ib_action_instance_t *action;       /**< Action */
-    ib_list  _t          *args;         /**< Args to the action function */
-} ib_ruleng_rule_action;
+    PHASE_INVALID = -1,                 /**< Invalid; used to terminate list */
+    PHASE_NONE,                         /**< No phase */
+    PHASE_REQUEST_HEADER,               /**< Request header available. */
+    PHASE_REQUEST_BODY,                 /**< Request body available. */
+    PHASE_RESPONSE_HEADER,              /**< Response header available. */
+    PHASE_RESPONSE_BODY,                /**< Response body available. */
+    PHASE_POSTPROCESS,                  /**< Post-processing phase. */
+    IB_RULE_PHASE_COUNT
+} ib_rule_phase_type_t;
 
 /**
  * Rule engine: Rule
  */
-typedef struct {
-    ib_ruleng_rule_meta        meta;
-    ib_ruleng_rule_condition   condition;
-    ib_list_t                 *true_actions;
-    ib_list_t                 *false_actions; /**< List of action
-    ib_ruleng_rulelist_t      *rule_list;     /**< Parent rule list */
-} ib_ruleng_rule_t;
-
-/**
- * Rule engine: Rule list
- */
-typedef struct {
-    ib_list_t                 *rule_list;
-} ib_ruleng_rulelist_t;
-
-/**
- * Rule engine: Rule set
- */
-typedef struct {
-    ib_ruleng_rulelist_t      *rules;
-} ib_ruleng_ruleset_t;
-
-/**
- * Register a rule.
- *
- * Register a rule for the rule engine.
- *
- * @param pdst Rule to register
- *
- * @returns Status code
- */
-ib_status_t DLL_PUBLIC ib_register_rule(ib_rule_t *rule);
+typedef struct ib_rule_t ib_rule_t;
 
 /**
  * Create a rule.
  *
  * Allocates a rule for the rule engine, initializes it.
  *
- * @param pdst Address which new rule is written
+ * @param prule Address which new rule is written
+ * @param mp Memory pool to use for allocation (or NULL for default)
  *
  * @returns Status code
  */
-ib_status_t DLL_PUBLIC ib_rule_create(ib_rule_t **prule);
+ib_status_t DLL_PUBLIC ib_rule_create(ib_rule_t **prule,
+                                      ib_mpool_t *mp);
+
+/**
+ * Register a rule.
+ *
+ * Register a rule for the rule engine.
+ *
+ * @param rule Rule to register
+ * @param ctx Context in which to execute the rule
+ * @param phase Phase number in which to execute the rule
+ *
+ * @returns Status code
+ */
+ib_status_t DLL_PUBLIC ib_rule_register(ib_rule_t *rule,
+                                        ib_context_t *ctx,
+                                        ib_rule_phase_type_t phase);
 
 
 #ifdef __cplusplus
