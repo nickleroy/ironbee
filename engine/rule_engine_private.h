@@ -73,15 +73,15 @@ typedef enum {
 } ib_rule_rule_action_type;
 
 typedef struct {
-    ib_action_instance_t  *action;      /**< Action */
-    ib_list_t              args;        /**< Args to the action function */
+    ib_action_instance_t  *action;        /**< Action */
+    ib_list_t              args;          /**< Args to the action function */
 } ib_rule_rule_action_t;
 
 /**
  * Rule engine: Rule list
  */
 typedef struct {
-    ib_list_t              rule_list;      /**< List of rules */
+    ib_list_t              rule_list;     /**< List of rules */
 } ib_rulelist_t;
 
 /**
