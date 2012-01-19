@@ -66,12 +66,43 @@ typedef struct ib_rule_t ib_rule_t;
  * Allocates a rule for the rule engine, initializes it.
  *
  * @param prule Address which new rule is written
- * @param mp Memory pool to use for allocation (or NULL for default)
  *
  * @returns Status code
  */
-ib_status_t DLL_PUBLIC ib_rule_create(ib_rule_t **prule,
-                                      ib_mpool_t *mp);
+ib_status_t DLL_PUBLIC ib_rule_create(ib_rule_t **prule);
+
+/**
+ * Set a rule's operator.
+ *
+ * @param rule Rule to operate on
+ * @param name Input field name.
+ *
+ * @returns Status code
+ */
+ib_status_t DLL_PUBLIC ib_rule_set_operator(ib_rule_t *rule,
+                                            ib_operator_instance_t *op);
+
+/**
+ * Add an input field to a rule.
+ *
+ * @param rule Rule to operate on
+ * @param name Input field name.
+ *
+ * @returns Status code
+ */
+ib_status_t DLL_PUBLIC ib_rule_add_input(ib_rule_t *rule,
+                                         const char *name);
+
+/**
+ * Add a modifier to a rule.
+ *
+ * @param rule Rule to operate on
+ * @param str Modifier string
+ *
+ * @returns Status code
+ */
+ib_status_t DLL_PUBLIC ib_rule_add_modifier(ib_rule_t *rule,
+                                            const char *name);
 
 /**
  * Register a rule.

@@ -492,22 +492,61 @@ static ib_status_t rules_rule_params(ib_cfgparser_t *cp,
                                      void *cbdata)
 {
     IB_FTRACE_INIT(rules_rule_params);
-    ib_list_node_t *var;
+    ib_status_t     rc;
+    ib_list_node_t *inputs;
+    ib_list_node_t *op;
+    ib_list_node_t *mod;
+    ib_rule_t      *rule;
 
     ib_log_debug(cp->ib, 1, "Name: %s", name);
 
-    var = ib_list_first(vars);
-    if (var != NULL) {
-        printf("var: '%s'\n", (const char *)(var->data) );
-    }
-
-    var = ib_list_node_next(var);
-    if (var != NULL) {
-        printf("var2: '%s'\n", (const char *)(var->data) );
-    }
-
     if (cbdata != NULL) {
         IB_FTRACE_MSG("Callback data is not null.");
+    }
+
+    /* Get the inputs string */
+    inputs = ib_list_first(vars);
+    if ( (inputs == NULL) || (inputs->data == NULL) ) {
+        ib_log_error(cp->ib, 1, "No inputs for rule");
+        IB_FTRACE_RET_STATUS(IB_EINVAL);
+    }
+
+    /* Get the operator string */
+    op = ib_list_next(inputs);
+    if ( (op == NULL) || (op->data == NULL) ) {
+        ib_log_error(cp->ib, 1, "No operator for rule");
+        IB_FTRACE_RET_STATUS(IB_EINVAL);
+    }
+
+    /* Allocate a rule */
+    rc = ib_rule_create(&rule);
+    if (rc != IB_OK) {
+        ib_log_error(cp->ib, 1, "Failed to allocate rule: %d", rc);
+        IB_FTRACE_RET_STATUS(rc);
+    }
+    
+    /* Parse the inputs */
+    rc = ib_rule_parse_inputs(rule, inputs->data);
+    if (rc != IB_OK) {
+        ib_log_error(cp->ib, 1,
+                     "Error parsing rule inputs: %d", rc);
+        IB_FTRACE_RET_STATUS(rc);
+    }
+    
+    /* Parse the operator */
+    rc = ib_rule_parse_operator(rule, op->data);
+    if (rc != IB_OK) {
+        ib_log_error(cp->ib, 1,
+                     "Error parsing rule inputs: %d", rc);
+        IB_FTRACE_RET_STATUS(rc);
+    }
+
+    /* Finally, parse all of the modifiers */
+    mod = op;
+    while( (mod = ib_list_node_next(mod)) != NULL) {
+        rc = ib_rule_parse_modifier(mod->data);
+        if (rc != IB_OK) {
+        }
     }
 
     IB_FTRACE_RET_STATUS(IB_OK);

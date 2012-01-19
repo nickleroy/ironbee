@@ -46,7 +46,7 @@ extern "C" {
 
 /* TODO: in Craig's code */
 typedef struct ib_action_t ib_action_t;
-typedef struct ib_action_instance_t ib_action_instance_t;
+typedef struct ib_action_inst_t ib_action_inst_t;
 
 /**
  * Rule engine: Rule meta data
@@ -54,6 +54,7 @@ typedef struct ib_action_instance_t ib_action_instance_t;
 typedef struct {
     const char           *id;           /**< Rule ID */
     ib_rule_phase_type_t  phase;        /**< Phase to execute rule */
+    ib_list_t             inputs;       /**< Input field names */
     void                 *data;         /**< Generic data */
 } ib_rule_meta_t;
 
@@ -68,12 +69,8 @@ typedef struct {
 /**
  * Rule engine: action
  */
-typedef enum {
-    IB_ACTION_RETURN,
-} ib_rule_rule_action_type;
-
 typedef struct {
-    ib_action_instance_t  *action;        /**< Action */
+    ib_action_inst_t      *action;        /**< Action */
     ib_list_t              args;          /**< Args to the action function */
 } ib_rule_rule_action_t;
 
