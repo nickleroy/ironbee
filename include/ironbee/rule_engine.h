@@ -33,9 +33,7 @@
 #include <ironbee/mpool.h>
 #include <ironbee/engine.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+IB_C_BLOCK_START
 
 /**
  * @defgroup IronBeeRuleEngine Rule Engine
@@ -90,9 +88,13 @@ ib_status_t DLL_PUBLIC ib_rule_register(ib_rule_t *rule,
                                         ib_context_t *ctx,
                                         ib_rule_phase_type_t phase);
 
+/**
+ * Get the memory pool to use for rule allocations.
+ *
+ * @returns Pointer to the memory pool to use.
+ */
+ib_mpool_t DLL_PUBLIC *ib_rule_mpool(void);
 
-#ifdef __cplusplus
-}
-#endif
+IB_C_BLOCK_END
 
 #endif /* _IB_RULE_ENGINE_H_ */

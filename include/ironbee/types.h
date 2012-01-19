@@ -38,8 +38,14 @@
 
 
 #ifdef __cplusplus
-extern "C" {
+# define IB_C_BLOCK_START extern "C" {
+# define IB_C_BLOCK_END   }
+#else
+# define IB_C_BLOCK_START
+# define IB_C_BLOCK_END
 #endif
+
+IB_C_BLOCK_START
 
 /**
  * @defgroup IronBeeUtilTypes Type Definitions
@@ -91,8 +97,6 @@ typedef enum ib_status_t {
  * @} IronBeeUtil
  */
 
-#ifdef __cplusplus
-}
-#endif
+IB_C_BLOCK_END
 
 #endif /* _IB_TYPES_H_ */
