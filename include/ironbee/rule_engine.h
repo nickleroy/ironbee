@@ -47,14 +47,14 @@ extern "C" {
  * Rule phase number.
  */
 typedef enum {
-    PHASE_INVALID = -1,                 /**< Invalid; used to terminate list */
-    PHASE_NONE,                         /**< No phase */
-    PHASE_REQUEST_HEADER,               /**< Request header available. */
-    PHASE_REQUEST_BODY,                 /**< Request body available. */
-    PHASE_RESPONSE_HEADER,              /**< Response header available. */
-    PHASE_RESPONSE_BODY,                /**< Response body available. */
-    PHASE_POSTPROCESS,                  /**< Post-processing phase. */
-    IB_RULE_PHASE_COUNT
+    PHASE_INVALID = -1,             /**< Invalid; used to terminate list */
+    PHASE_NONE,                     /**< No phase */
+    PHASE_REQUEST_HEADER,           /**< Request header available. */
+    PHASE_REQUEST_BODY,             /**< Request body available. */
+    PHASE_RESPONSE_HEADER,          /**< Response header available. */
+    PHASE_RESPONSE_BODY,            /**< Response body available. */
+    PHASE_POSTPROCESS,              /**< Post-processing phase. */
+    IB_RULE_PHASE_COUNT,
 } ib_rule_phase_type_t;
 
 /**

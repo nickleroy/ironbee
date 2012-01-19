@@ -150,7 +150,6 @@ static ib_status_t load_ironbee_ffi(ib_engine_t* ib, lua_State* L) {
   }
 }
 
-
 /**
  * @brief Call a named lua function (IronBee rule) in the given lua_State.
  * @param[in] ib the IronBee context. Used mostly for logging.
@@ -491,25 +490,32 @@ static ib_status_t rules_rule_params(ib_cfgparser_t *cp,
                                      ib_list_t *vars,
                                      void *cbdata)
 {
-  IB_FTRACE_INIT(rules_rule_params);
+    IB_FTRACE_INIT(rules_rule_params);
+    ib_list_node_t *var;
 
-  ib_log_debug(cp->ib, 1, "Name: %s", name);
+    ib_log_debug(cp->ib, 1, "Name: %s", name);
 
-  ib_list_node_t *var = ib_list_first(vars);
+    var = ib_list_first(vars);
+    if (var != NULL) {
+        printf("var: '%s'\n", (const char *)(var->data) );
+    }
 
-  var = ib_list_node_next(var);
+    var = ib_list_node_next(var);
+    if (var != NULL) {
+        printf("var2: '%s'\n", (const char *)(var->data) );
+    }
 
-  if (cbdata!=NULL) {
-    IB_FTRACE_MSG("Callback data is not null.");
-  }
+    if (cbdata != NULL) {
+        IB_FTRACE_MSG("Callback data is not null.");
+    }
 
-  IB_FTRACE_RET_STATUS(IB_OK);
+    IB_FTRACE_RET_STATUS(IB_OK);
 }
 
 
 static IB_DIRMAP_INIT_STRUCTURE(rules_directive_map) = {
 
-    /* Give the config parser a callback for the directive GeoIPDatabaseFile */
+    /* Give the config parser a callback for the Rule and RuleExt directive */
     IB_DIRMAP_INIT_LIST(
         "Rule",
         rules_rule_params,
